@@ -1,16 +1,21 @@
-﻿using System;
+﻿using SI.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 
-namespace AI.Controllers
+namespace SI.Controllers
 {
     public class HomeController : Controller
     {
+        SIDb _db = new SIDb();
+
         public ActionResult Index()
         {
-            return View();
+            var model = _db.Posts.ToList();
+
+            return View(model);
         }
 
         public ActionResult About()
@@ -25,6 +30,13 @@ namespace AI.Controllers
             ViewBag.Message = "Your contact page.";
 
             return View();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_db != null)
+                _db.Dispose();
+            base.Dispose(disposing);
         }
     }
 }

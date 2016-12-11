@@ -1,7 +1,7 @@
 ﻿using System.Web;
 using System.Web.Mvc;
 
-namespace AI
+namespace SI
 {
     public class FilterConfig
     {

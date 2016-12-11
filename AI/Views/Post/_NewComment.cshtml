@@ -1,0 +1,12 @@
+﻿@model SI.Models.Comment
+
+@using (Html.BeginForm("Create", "Comment")) 
+{
+    @Html.AntiForgeryToken()
+    
+    @Html.HiddenFor(model => model.PostId)
+
+    @Html.EditorFor(model => model.Body, new { htmlAttributes = new { @class = "form-control", @style = "float:left", @placeholder = "Add comment" } })
+    <input type="submit" value="Submit" class="btn btn-default" />
+    @Html.ValidationMessageFor(model => model.Body, "", new { @class = "text-danger" })
+}

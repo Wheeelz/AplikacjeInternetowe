@@ -1,0 +1,18 @@
+﻿@model SI.Models.Post
+
+@{
+    ViewBag.Title = Model.Title;
+}
+
+<div>
+    <h2>@Html.DisplayFor(model => model.Title)</h2>
+    @Helper.PostImg(Model)
+    <div>
+        @Html.ActionLink("Edit", "Edit", "Post", new { id = Model.Id }, null) |
+        @Html.ActionLink("Delete", "Delete", "Post", new { id = Model.Id }, null)
+    </div>
+    <hr />
+</div>
+
+
+

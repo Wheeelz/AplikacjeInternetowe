@@ -6,9 +6,9 @@ using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
-using AI.Models;
+using SI.Models;
 
-namespace AI.Controllers
+namespace SI.Controllers
 {
     [Authorize]
     public class ManageController : Controller
