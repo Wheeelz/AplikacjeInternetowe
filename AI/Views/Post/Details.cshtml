@@ -1,4 +1,4 @@
-﻿@model SI.Models.Post
+﻿@model AI.Models.Post
 
 @{
     ViewBag.Title = Model.Title;
@@ -6,13 +6,24 @@
 
 <div>
     <h2>@Html.DisplayFor(model => model.Title)</h2>
-    @Helper.PostImg(Model)
+    @Helper.PostImg(Model.ImgName, false)
     <div>
         @Html.ActionLink("Edit", "Edit", "Post", new { id = Model.Id }, null) |
-        @Html.ActionLink("Delete", "Delete", "Post", new { id = Model.Id }, null)
+        @Html.ActionLink("Delete", "Delete", "Post", new { id = Model.Id }, null) |
+        @Model.Author.Name
     </div>
     <hr />
 </div>
 
+<h3>Comments</h3>
 
+@Html.Partial("_NewComment", new AI.Models.Comment(Model.Id))
 
+@foreach (var com in Model.Comments)
+{
+    <div class="commentsection">
+        <img src='@Url.Content("~/Img/Avatars/" + com.Author.AvatarName)' class="avatarMedium" />
+        <user>@com.Author.Name</user>
+        <comment>@com.Body</comment>
+    </div> 
+}

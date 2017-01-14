@@ -1,19 +1,18 @@
-namespace SI.Migrations
+namespace AI.Migrations
 {
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<SI.Models.SIDb>
+    internal sealed class Configuration : DbMigrationsConfiguration<AI.Models.SIDb>
     {
         public Configuration()
         {
             AutomaticMigrationsEnabled = true;
-            ContextKey = "SI.Models.SIDb";
         }
 
-        protected override void Seed(SI.Models.SIDb context)
+        protected override void Seed(AI.Models.SIDb context)
         {
             //  This method will be called after migrating to the latest version.
 

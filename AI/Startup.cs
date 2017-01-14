@@ -1,8 +1,8 @@
 ﻿using Microsoft.Owin;
 using Owin;
 
-[assembly: OwinStartupAttribute(typeof(SI.Startup))]
-namespace SI
+[assembly: OwinStartupAttribute(typeof(AI.Startup))]
+namespace AI
 {
     public partial class Startup
     {

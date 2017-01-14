@@ -6,40 +6,14 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
-using SI.Models;
+using AI.Models;
+using Microsoft.AspNet.Identity;
 
-namespace SI.Controllers
+namespace AI.Controllers
 {
-    public class CommentController : Controller
+    public class CommentController : BaseController
     {
         private SIDb db = new SIDb();
-
-        // GET: Comment
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        // GET: Comment/Details/5
-        public ActionResult Details(int? id)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            Comment comment = db.Comments.Find(id);
-            if (comment == null)
-            {
-                return HttpNotFound();
-            }
-            return View(comment);
-        }
-
-        // GET: Comment/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
 
         // POST: Comment/Create
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
@@ -48,14 +22,21 @@ namespace SI.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Body,PostId")] Comment comment)
         {
-            if (ModelState.IsValid)
+            comment.Date = DateTime.Now;
+            if (User.Identity.IsAuthenticated)
             {
+                comment.AuthorId = User.Identity.GetUserId();
+            ModelState.Clear();
+            if (TryValidateModel(comment))
+            {
+
                 db.Comments.Add(comment);
                 db.SaveChanges();
                 return RedirectToAction("Details", "Post", new { id = comment.PostId });
             }
-
             return View(comment);
+        }
+            else return Content("You need to register to comment posts");
         }
 
         // GET: Comment/Edit/5

@@ -6,23 +6,119 @@ using System.Linq;
 using System.Net;
 using System.Web;
 using System.Web.Mvc;
-using SI.Models;
+using AI.Models;
 using System.Configuration;
+using Microsoft.AspNet.Identity;
 
-namespace SI.Controllers
+
+namespace AI.Controllers
 {
-    public class PostController : Controller
+    public class PostController : BaseController
     {
         private SIDb db = new SIDb();
 
-        // GET: Post
         public ActionResult Index()
         {
-            return View(db.Posts.ToList());
+            var model = db.Posts.OrderByDescending(p => p.Date).ToList();
+            return View(model);
+        }
+
+
+        [Authorize]
+        public ActionResult Vote(string id, string submit)
+        {
+            var post = db.Posts.Find(id);
+            var user = db.Users.Find(User.Identity.GetUserId());
+            var model = db.Posts.OrderByDescending(p => p.Date).ToList();
+
+            PostVote theVote = db.PostVotes.Find(user.Id, post.Id);
+
+            if (theVote == null)
+            {
+                PostVote newVote = new PostVote();
+
+                newVote.PostId = post.Id;
+                newVote.Date = DateTime.Now;
+                newVote.UserId = user.Id;
+                newVote.IsUpvote = (submit == "UpVote");
+
+                if (submit == "UpVote")
+                    post.Score++;
+                else
+                    post.Score--;
+
+                db.Entry(post).State = EntityState.Modified;
+                db.PostVotes.Add(newVote);
+                db.SaveChanges();
+            }
+            else
+            {
+                if(submit == "UpVote")
+                {
+                    if (theVote.IsUpvote)
+                    {
+                        return PartialView("_Score", post);
+                    }
+                    else
+                    {
+                        theVote.IsUpvote = true;
+                        post.Score += 2;
+
+                        db.Entry(theVote).State = EntityState.Modified;
+                        db.Entry(post).State = EntityState.Modified;
+                        db.SaveChanges();
+                    }
+                }
+                else
+                {
+                    if (!theVote.IsUpvote)
+                    {
+                        return PartialView("_Score", post);
+                    }
+                    else
+                    {
+                        theVote.IsUpvote = false;
+                        post.Score -= 2;
+
+                        db.Entry(theVote).State = EntityState.Modified;
+                        db.Entry(post).State = EntityState.Modified;
+                        db.SaveChanges();
+                    }
+                }
+                
+            }
+
+            return PartialView("_Score", post);
+        }
+
+
+        // GET: <sectionName>
+        public ActionResult Section(string sectionName)
+        {
+            Section section;
+            try
+            {
+                section = db.Sections.Single(s => s.Name == sectionName);
+            }
+            catch (Exception)
+            {
+                return HttpNotFound();
+            }
+
+            var posts = section.Posts.OrderByDescending(p => p.Date).ToList();
+
+            if (posts.Count() < 1)
+            {
+                db.Sections.Remove(section);
+                db.SaveChanges();
+                return HttpNotFound();
+            }
+
+            return View("index", posts);
         }
 
         // GET: Post/Details/5
-        public ActionResult Details(int? id)
+        public ActionResult Details(string id)
         {
             if (id == null)
             {
@@ -37,9 +133,11 @@ namespace SI.Controllers
         }
 
         // GET: Post/Create
+        [Authorize]
         public ActionResult Create()
         {
-            return View();
+            var newPostViewModel = new NewPostViewModel();
+            return View(newPostViewModel);
         }
 
         // POST: Post/Create
@@ -47,44 +145,83 @@ namespace SI.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Title")] Post post, HttpPostedFileBase file)
+        [Authorize]
+        public ActionResult Create([Bind(Include = "Title, File, NSFW, Tags")] NewPostViewModel newPost)
         {
-            if (ModelState.IsValid && file != null)
+            if (ModelState.IsValid)
             {
-                int id = 0;
-                try {
-                    Post lastPost = db.Posts.OrderBy(p => p.Id).AsEnumerable().Last();
-                    id = lastPost.Id + 1;
-                } catch (InvalidOperationException) { }
+                Post post = new Post
+                {
+                    Score = 0,
+                    Title = newPost.Title,
+                    NSFW = newPost.NSFW,
+                    AuthorId = User.Identity.GetUserId(),
+                    Date = DateTime.Now,
+                    Sections = new List<Section>()
+                };
 
-                string fileName = id.ToString() + "." + file.FileName.Split('.').Last();
+                var tags = newPost.Tags.Split(',');
 
-                file.SaveAs(HttpContext.Server.MapPath(ConfigurationManager.AppSettings["postImgsPath"]) + fileName);
+                var sections = db.Sections;
+                foreach (string t in tags)
+                {
+                    var tag = FirstToUpper(t.Trim());
+                    Section section;
+                    try
+                    {
+                        section = db.Sections.Single(s => s.Name == tag);
+                    }
+                    catch (Exception)
+                    {
+                        section = new Section { Name = tag };
+                        db.Sections.Add(section);
+                    }
+                    post.Sections.Add(section);
+                }
 
-                post.ImgName = fileName;
+                byte[] buf = new byte[6];
+                Random rand = new Random();
+
                 db.Posts.Add(post);
-                db.SaveChanges();
 
+                //generate random 42-bit ID (7 base64 characters) until unique
+                do
+                {
+                    rand.NextBytes(buf);
+                    post.Id = Convert.ToBase64String(buf).Substring(0, 7);
+                    post.ImgName = post.Id + "." + newPost.File.FileName.Split('.').Last();
+                }
+                while (!db.TrySaveChanges());
 
+                newPost.File.SaveAs(HttpContext.Server.MapPath(ConfigurationManager.AppSettings["postImgsPath"]) + post.ImgName);
+
+                //return RedirectToAction("Details", new { id = post.Id });
                 return RedirectToAction("Index", "Home");
             }
 
-            return View(post);
+            return View(newPost);
+
         }
 
         // GET: Post/Edit/5
-        public ActionResult Edit(int? id)
+        public ActionResult Edit(string id)
         {
             if (id == null)
-            {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
             Post post = db.Posts.Find(id);
             if (post == null)
-            {
                 return HttpNotFound();
-            }
-            return View(post);
+
+            var editPostViewModel = new EditPostViewModel
+            {
+                Id = post.Id,
+                Title = post.Title,
+                ImgName = post.ImgName,
+                NSFW = post.NSFW,
+                Tags = String.Join(", ", post.Sections.Select(s => s.Name))
+            };
+
+            return View(editPostViewModel);
         }
 
         // POST: Post/Edit/5
@@ -92,19 +229,42 @@ namespace SI.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit([Bind(Include = "Id, Title, ImgName")] Post post)
+        public ActionResult Edit([Bind(Include = "Id, Title, NSFW, Tags")] EditPostViewModel editedPost)
         {
             if (ModelState.IsValid)
             {
+                var post = db.Posts.Find(editedPost.Id);
+                post.Title = editedPost.Title;
+                post.NSFW = post.NSFW;
+
+                var tags = editedPost.Tags.Split(',');
+                post.Sections.Clear();
+                var sections = db.Sections;
+                foreach (string t in tags)
+                {
+                    var tag = FirstToUpper(t.Trim());
+                    Section section;
+                    try
+                    {
+                        section = db.Sections.Single(s => s.Name == tag);
+                    }
+                    catch (Exception)
+                    {
+                        section = new Section { Name = tag };
+                        db.Sections.Add(section);
+                    }
+                    post.Sections.Add(section);
+                }
+
                 db.Entry(post).State = EntityState.Modified;
                 db.SaveChanges();
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Details", new { id = post.Id });
             }
-            return View(post);
+            return View(editedPost);
         }
 
         // GET: Post/Delete/5
-        public ActionResult Delete(int? id)
+        public ActionResult Delete(string id)
         {
             if (id == null)
             {
@@ -118,10 +278,12 @@ namespace SI.Controllers
             return View(post);
         }
 
+
+
         // POST: Post/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(int id)
+        public ActionResult DeleteConfirmed(string id)
         {
             Post post = db.Posts.Find(id);
             string filePath = HttpContext.Server.MapPath(ConfigurationManager.AppSettings["postImgsPath"]) + post.ImgName;
@@ -138,6 +300,20 @@ namespace SI.Controllers
                 db.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+
+
+        
+        public static string FirstToUpper(string str)
+        {
+            if (str == null)
+                return null;
+
+            if (str.Length > 1)
+                return char.ToUpper(str[0]) + str.Substring(1);
+
+            return str.ToUpper();
         }
     }
 }

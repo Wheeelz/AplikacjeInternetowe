@@ -1,33 +1,19 @@
-﻿@model IEnumerable<SI.Models.Post>
+﻿@model IEnumerable<AI.Models.Post>
 
 @{
-    ViewBag.Title = "Index";
+    var allowNSFW = ViewBag.nsfw;
 }
 
-<h2>Index</h2>
-
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.Title)
-        </th>
-        <th></th>
-    </tr>
-
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.Title)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
-            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
-        </td>
-    </tr>
+@foreach (var post in Model)
+{
+    <div>
+        <h2 class="title">@Html.RouteLink(post.Title, "Beng", new { id = post.Id })</h2>
+        
+        <a href="/beng/@post.Id">
+            @Helper.PostImg(post.ImgName, post.NSFW && !allowNSFW)
+        </a>
+        <div class="Score" id="@post.Id">
+            @Html.Partial("_Score", post)
+        </div>
+        </div>
 }
-
-</table>
