@@ -23,6 +23,11 @@ namespace AI.Controllers
             return View(model);
         }
 
+        public ActionResult Vote(string id)
+        {
+            var post = db.Posts.Find(id);
+            return PartialView("_Score", post);
+        }
 
         [Authorize]
         public ActionResult Vote(string id, string submit)
@@ -160,23 +165,27 @@ namespace AI.Controllers
                     Sections = new List<Section>()
                 };
 
-                var tags = newPost.Tags.Split(',');
 
-                var sections = db.Sections;
-                foreach (string t in tags)
+                if (newPost.Tags != null)
                 {
-                    var tag = FirstToUpper(t.Trim());
-                    Section section;
-                    try
+                    var tags = newPost.Tags.Split(',');
+
+                    var sections = db.Sections;
+                    foreach (string t in tags)
                     {
-                        section = db.Sections.Single(s => s.Name == tag);
+                        var tag = FirstToUpper(t.Trim());
+                        Section section;
+                        try
+                        {
+                            section = db.Sections.Single(s => s.Name == tag);
+                        }
+                        catch (Exception)
+                        {
+                            section = new Section { Name = tag };
+                            db.Sections.Add(section);
+                        }
+                        post.Sections.Add(section);
                     }
-                    catch (Exception)
-                    {
-                        section = new Section { Name = tag };
-                        db.Sections.Add(section);
-                    }
-                    post.Sections.Add(section);
                 }
 
                 byte[] buf = new byte[6];

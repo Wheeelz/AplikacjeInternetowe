@@ -55,7 +55,7 @@
         <footer>
             <p>&copy; @DateTime.Now.Year - Dziki zgon programmers </p>
             <div class="slider demo" id="slider-2">
-                <input type="checkbox" id="jebanyklikacz" name="cbSkin" value="" />
+                <input type="checkbox" id="klikacz" name="cbSkin" value="" />
             </div>
 
         </footer>
@@ -72,19 +72,19 @@
 
        (function setCheckbox() {
            if ( $('body').hasClass('dark') ) {
-               $("#jebanyklikacz").switchButton({
+               $("#klikacz").switchButton({
                    checked: true
                });
            }
            else
-               $("#jebanyklikacz").switchButton({
+               $("#klikacz").switchButton({
                    checked: false
                });
        })();
 
 
         $('input[name=cbSkin]').change(function () {
-            if (document.getElementById("jebanyklikacz").checked === true) {
+            if (document.getElementById("klikacz").checked === true) {
                 $.ajax({
                     url: '@Url.Action("uptadeTheme")'
                 });

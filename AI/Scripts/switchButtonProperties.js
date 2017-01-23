@@ -7,7 +7,7 @@
 });
 
 $('input[name=cbSkin]').change(function () {
-    if (document.getElementById("jebanyklikacz").checked === true) {
+    if (document.getElementById("klikacz").checked === true) {
        //
     }
     else {

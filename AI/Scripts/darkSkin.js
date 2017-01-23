@@ -24,13 +24,13 @@ function setStyleFromCookie() {
 
 function setCheckboxFromCookie() {
     if (getCookie("style").length === 4) {
-        $("#jebanyklikacz").switchButton({
+        $("#klikacz").switchButton({
             checked: true
         });
         $("#checkbox").prop("checked", true);
     }
     else
-        $("#jebanyklikacz").switchButton({
+        $("#klikacz").switchButton({
             checked: false
         });
 }

@@ -9,7 +9,9 @@ namespace AI
         public static void RegisterBundles(BundleCollection bundles)
         {
             bundles.Add(new ScriptBundle("~/bundles/jquery").Include(
-                        "~/Scripts/jquery-{version}.js"));
+                        "~/Scripts/jquery-{version}.js",
+                        "~/Scripts/jquery.unobtrusive-ajax.min.js",
+                        "~/Scripts/jquery.unobtrusive-ajax.min.js"));
 
             bundles.Add(new ScriptBundle("~/bundles/jqueryval").Include(
                         "~/Scripts/jquery.validate*"));
@@ -36,7 +38,7 @@ namespace AI
             bundles.Add(new StyleBundle("~/Content/cssThemeDark").Include(
                 "~/Content/bootstrapDark.css"));
 
-            bundles.Add(new StyleBundle("~/Content/cssDark").Include(                      
+            bundles.Add(new StyleBundle("~/Content/cssDark").Include(
                        "~/Content/jquery.switchButton.css"));
 
             bundles.Add(new ScriptBundle("~/Scripts/scriptsDark").Include(
